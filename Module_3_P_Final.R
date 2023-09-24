@@ -66,11 +66,15 @@ aicw(anole.phylo.aic$AICc)
 
 #Produce a plot of your own design that concisely visualizes the effect of your covariate(s) and factors (i.e., ecomorph) on the hindlimb residuals of the best fitting PGLS model.
 
+anole.log <- anole.log%>%
+  mutate(phylo.res.best=residuals(Anole.BM4)) %>% 
+  mutate(phylo.res.no.covariates=residuals(Anole.BM1))
+  
 
-
-
-
-
-
+anole.log%>%
+  dplyr::select(Ecomorph2,phylo.res.best,phylo.res.no.covariates)%>%
+  pivot_longer(cols=c("phylo.res.best", "phylo.res.no.covariates"))%>%
+  print %>% 
+  ggplot(aes(x=Ecomorph2,y=value)) +geom_boxplot() +stat_summary(fun=mean, geom="point", size=3)+facet_grid(name~.,scales = "free_y")+ylab("residual")
 
 #Commit your script to your group repository.
