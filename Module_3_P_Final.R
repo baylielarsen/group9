@@ -12,7 +12,6 @@ anole2 <- anole %>%
 anole.log <- anole2%>%
   mutate_at(c("SVL", "HTotal","PH","ArbPD"),log)
 
-
 #Using the log-transformed data, construct two simple linear models that assess the effect of perch diameter and height by including these as covariates in your models. Be sure to use + notation rather than *, assuming there is no interaction (there isn’t, trust me!).
 
   #Linear Model Assessing Perch Diameter (ArbPD)
@@ -58,24 +57,20 @@ Anole.BM3 <- gls(HTotal ~SVL + PH , correlation = corBrownian(1,phy = anole.tree
 
 Anole.BM4 <- gls(HTotal ~SVL + PH + ArbPD, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
 
-#Assess the fit of each of these three models using AICc and AICw and comment on (with comments in the script) whether one or both of the covariates is a significant predictor of hinglimb length in a phylogenetic context.
+#Assess the fit of each of these three models using AICc and AICw and comment on (with comments in the script) whether one or both of the covariates is a significant predictor of hindlimb length in a phylogenetic context.
 
 anole.phylo.aic <- AICc(Anole.BM1,Anole.BM2,Anole.BM3,Anole.BM4)
 aicw(anole.phylo.aic$AICc)
 
-
-
-
-
-
-
-
-
-
-
-
+#The Model with perch diameter as a covariate has a significantly lower AIC score than the model without covariates, indicating that perch diameter is a significant predictor of hindlimb length in a phylogenetic context. The model with perch height as a covariate has a lower AIC score than the model without covariates indicating that perch height also strengthens the model. The best model (with the lowest AIC score),counts perch height and diameter as covariates. 
 
 #Produce a plot of your own design that concisely visualizes the effect of your covariate(s) and factors (i.e., ecomorph) on the hindlimb residuals of the best fitting PGLS model.
+
+
+
+
+
+
 
 
 #Commit your script to your group repository.
