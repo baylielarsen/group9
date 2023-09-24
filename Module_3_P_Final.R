@@ -62,7 +62,7 @@ Anole.BM4 <- gls(HTotal ~SVL + PH + ArbPD, correlation = corBrownian(1,phy = ano
 anole.phylo.aic <- AICc(Anole.BM1,Anole.BM2,Anole.BM3,Anole.BM4)
 aicw(anole.phylo.aic$AICc)
 
-#The Model with perch diameter as a covariate has a significantly lower AIC score than the model without covariates, indicating that perch diameter is a significant predictor of hindlimb length in a phylogenetic context. The model with perch height as a covariate has a lower AIC score than the model without covariates indicating that perch height also strengthens the model. The best model (with the lowest AIC score),counts perch height and diameter as covariates. 
+  #Answer:The Model with perch diameter as a covariate has a significantly lower AIC score than the model without covariates, indicating that perch diameter is a significant predictor of hindlimb length in a phylogenetic context. The model with perch height as a covariate has a lower AIC score than the model without covariates indicating that perch height also strengthens the model. The best model (with the lowest AIC score),counts perch height and diameter as covariates. 
 
 #Produce a plot of your own design that concisely visualizes the effect of your covariate(s) and factors (i.e., ecomorph) on the hindlimb residuals of the best fitting PGLS model.
 
