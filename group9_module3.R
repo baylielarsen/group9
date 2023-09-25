@@ -1,105 +1,80 @@
-#setup
-anole <- read.csv("anole.dat.csv")
-anole.eco <- read.csv("anole.eco.csv")
+#Combine the code above so that you can establish the anole.log data tibble.
 
-#load libraries
-library(tidyverse) 
-install.packages("ape")
-install.packages("nlme")
-install.packages("geiger")
-install.packages("caper")
-install.packages("phytools")
-install.packages("viridis")
-install.packages("MuMIn")
+anole <- read_csv("anole.dat.csv")
+anole.eco <- read_csv("anole.eco.csv")
 
-library(ape)
-library(nlme)
-library(geiger)
-library(caper)
-library(phytools)
-library(viridis)
-library(MuMIn)
-library(tidyverse)
-
-#establishing the data tibble
-anole2 <- anole%>%
-  left_join(anole.eco)%>%
-  filter(!Ecomorph%in%c("U","CH"))%>%
-  na.omit()%>%
+anole2 <- anole %>% 
+  left_join(anole.eco) %>% 
+  filter(!Ecomorph %in%c("U", "CH")) %>% 
+  na.omit() %>% 
   print()
 
 anole.log <- anole2%>%
   mutate_at(c("SVL", "HTotal","PH","ArbPD"),log)
 
-print(anole.log)
+#Using the log-transformed data, construct two simple linear models that assess the effect of perch diameter and height by including these as covariates in your models. Be sure to use + notation rather than *, assuming there is no interaction (there isn’t, trust me!).
 
-#using log transformed data to construct two simple linear models
-anole.lin1<- lm(SVL ~ ArbPD, data = anole.log)
-coef(anole.lin1)
+#Linear Model Assessing Perch Diameter (ArbPD)
+Anole.log.ArbPD.lm <- lm(HTotal~SVL + ArbPD, anole.log)
 
-anole.lin2 <- lm(SVL ~ PH, data = anole.log)
-coef(anole.lin2)
+#Linear Model Assessing Perch Height (PH)
+Anole.log.PH.lm <- lm(HTotal~SVL + PH, anole.log)
 
-#plotting residuals
-library(modelr)
-options(na.action = na.warn)
+#Explore how both perch diameter and height effect the hindlimb-SVL relationship by plotting the residuals of your simple linear models against these discrete factors. This will require mutating a data tibble to include residuals from both models. Please produce two separate plots.
 
-anole.log$residuals_anole.lin1 <- resid(anole.lin1)
+#Mutating Tibble 
+anole.log <- anole.log %>% 
+  mutate(res1 = residuals(Anole.log.ArbPD.lm)) %>% 
+  mutate(res2 = residuals(Anole.log.PH.lm))
 
-plot1 <- ggplot(anole.log, aes(x = ArbPD, y = residuals_anole.lin1)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "Residuals vs. Perch Diameter")
+#ArbPD Residuals 
+ArbPD.Res.Graph <- anole.log%>%
+  ggplot(aes(x=ArbPD,y=res1)) +geom_point()
+print(ArbPD.Res.Graph)
 
-plot1
+#PH Residuals 
+PH.Res.Graph <- anole.log%>%
+  ggplot(aes(x=PH,y=res2)) +geom_point()
+print(PH.Res.Graph)
 
-anole.log$residuals_anole.lin2 <- resid(anole.lin2)
+#Under a BM model of trait evolution and using the tree provided, construct phylogenetic least squares models of the hindlimb-SVL relationships that include the unique combinations of these two covariates, i.e,
 
-plot2 <- ggplot(anole.log, aes(x = PH, y = residuals_anole.lin2)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
-  labs(title = "Residuals vs. Perch Height")
-
-plot2
-
-#BM model of trait evolution
+#Loading anole.tree
 anole.tree <- read.tree("anole.tre")
-plot(anole.tree,cex=0.4)
-?read.tree
 
-pgls.BM1 <- gls(SVL ~PH, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
-pgls.BM2 <- gls(SVL ~ArbPD, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
-pgls.BM3 <- gls(SVL ~PH + ArbPD, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
+#A PGLS model with the hinglimb~SVL relationship + no other covariates
 
-print(pgls.BM1)
-print(pgls.BM2)
-print(pgls.BM3)
+Anole.BM1 <- gls(HTotal ~SVL, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
 
-AICc_pgls.BM1 <- AICc(pgls.BM1)
-AICc_pgls.BM2 <- AICc(pgls.BM2)
-AICc_pgls.BM3 <- AICc(pgls.BM3)
-print(AICc_pgls.BM1)
-print(AICc_pgls.BM2)
-print(AICc_pgls.BM3)
+#A PGLS model with the hindlimb-SVL relationship + perch diameter
+Anole.BM2 <- gls(HTotal ~SVL + ArbPD, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
 
-library(MuMIn)
-AICw_pgls.BM1 <- aicw(AICc_pgls.BM1)
-AICw_pgls.BM2 <- aicw(AICc_pgls.BM2)
-AICw_pgls.BM3 <- aicw(AICc_pgls.BM3)
+#A PGLS model with the hindlimb-SVL relationship + perch height
 
-print(AICw_pgls.BM1)
-print(AICw_pgls.BM2)
-print(AICw_pgls.BM3)
+Anole.BM3 <- gls(HTotal ~SVL + PH , correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
 
-#make own plot
+#A PGSL model with the hindlimb-SVL relationship + perch height + perch diameter
 
-library(ggplot2)
+Anole.BM4 <- gls(HTotal ~SVL + PH + ArbPD, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
 
-ggplot(anole.log, aes(x = ArbPD, y = residuals_anole.lin1)) +
-  geom_point() +
-  labs(
-    title = "Scatter Plot of Perch Height vs. Hindlimb Residuals",
-    x = "Perch Height",
-    y = "Hindlimb Residuals"
-  ) +
-  theme_minimal()
+#Assess the fit of each of these three models using AICc and AICw and comment on (with comments in the script) whether one or both of the covariates is a significant predictor of hindlimb length in a phylogenetic context.
+
+anole.phylo.aic <- AICc(Anole.BM1,Anole.BM2,Anole.BM3,Anole.BM4)
+aicw(anole.phylo.aic$AICc)
+
+#Answer:The Model with perch diameter as a covariate has a significantly lower AIC score than the model without covariates, indicating that perch diameter is a significant predictor of hindlimb length in a phylogenetic context. The model with perch height as a covariate has a lower AIC score than the model without covariates indicating that perch height also strengthens the model. The best model (with the lowest AIC score),counts perch height and diameter as covariates. 
+
+#Produce a plot of your own design that concisely visualizes the effect of your covariate(s) and factors (i.e., ecomorph) on the hindlimb residuals of the best fitting PGLS model.
+
+anole.log <- anole.log%>%
+  mutate(phylo.res.best=residuals(Anole.BM4)) %>% 
+  mutate(phylo.res.no.covariates=residuals(Anole.BM1))
+
+
+anole.log%>%
+  dplyr::select(Ecomorph2,phylo.res.best,phylo.res.no.covariates)%>%
+  pivot_longer(cols=c("phylo.res.best", "phylo.res.no.covariates"))%>%
+  print %>% 
+  ggplot(aes(x=Ecomorph2,y=value)) +geom_boxplot() +stat_summary(fun=mean, geom="point", size=3)+facet_grid(name~.,scales = "free_y")+ylab("residual")
+
+#Commit your script to your group repository.
